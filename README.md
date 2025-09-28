@@ -65,8 +65,8 @@ By combining traditional biodiversity metrics, trait-based approaches, and multi
 
 - **ANOVA Results**: Significant differences in pollution tolerance across ecoregions (F = 55.67, p < 2e-16).
 - **EPT Proportion**:
-      - High: WMT, Western Mountains (~0.42) → better water quality.
-      - Low: CPL, Coastal Plains (~0.18) → degraded water quality.
+   - High: WMT, Western Mountains (~0.42) → better water quality.
+   - Low: CPL, Coastal Plains (~0.18) → degraded water quality.
 - **Community-Weighted Pollution Tolerance (CWM-PTV)**:
       - High: TPL, Temperate Plains & CPL, Coastal Plains → dominance of tolerant taxa.
       - Low: WMT, Western Mountains & SAP, Southeastern Plains → dominance of sensitive taxa.
