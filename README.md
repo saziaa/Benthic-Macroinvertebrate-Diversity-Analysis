@@ -1,4 +1,4 @@
-## **Benthic-Macroinvertebrate-Diversity Analysis**
+## **Benthic Macroinvertebrate Diversity Analysis**
 
 📌  **Project Overview**
 
