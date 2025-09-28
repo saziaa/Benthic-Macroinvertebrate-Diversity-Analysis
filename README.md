@@ -124,4 +124,16 @@ The analysis of macroinvertebrate community composition across U.S. ecoregions i
    - Tolerant taxa in CPL/SPL indicate degraded or enriched conditions.
    - Indicator species provide useful bioindicators of water quality and ecosystem health.
 
+⚙️ **Tools & Libraries**
 
+- Language: R
+
+- Key Packages:
+
+   - vegan (diversity, ordination, PERMANOVA)
+
+   - indicspecies (Indicator Species Analysis)
+
+   - ggplot2 (visualization)
+
+   - dplyr, tidyr (data wrangling)
