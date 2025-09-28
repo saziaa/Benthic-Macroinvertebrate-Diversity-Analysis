@@ -1,0 +1,562 @@
+---
+title: "Benthic_Macroinvertebrate"
+author: "Sazia Afreen"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Set project folder
+
+proj <- "D:/Benthic_Macroinvertebrate_Project"
+dir.create(proj, recursive = TRUE, showWarnings = FALSE)
+setwd(proj)
+```
+
+```{r}
+# Reactivate project environment
+renv::activate()
+
+# Define package list (keeps it in memory)
+pkgs <- c("tidyverse","janitor","vegan","indicspecies","patchwork","readr","iNEXT","yaml")
+
+# Load libraries
+library(tidyverse)
+library(janitor)
+library(vegan)
+library(indicspecies)
+library(patchwork)
+library(iNEXT)
+
+```
+```{r}
+library(tidyverse)   # includes dplyr, readr, ggplot2, etc.
+library(janitor)     # for clean_names()
+
+```
+
+
+```{r}
+# Load Data
+dat <- read_csv("D:/Benthic_Macroinvertebrate_Project/nrsa_1819_benthic_macroinvertebrate_count_-_data.csv") %>%
+  clean_names()
+```
+
+
+```{r}
+# Check First Few Rows
+head(dat)
+summary(dat)
+colSums(is.na(dat)) 
+```
+
+```{r}
+# Data Cleaning
+
+## Remove fully empty or irrelevant columns
+dat <- dat %>%
+  select(-non_target)  # 100% missing, not useful
+```
+
+
+```{r}
+## Handle categorical traits: replace NA with "Unknown"
+dat <- dat %>%
+  mutate(
+    ffg   = ifelse(is.na(ffg), "Unknown", ffg),
+    habit = ifelse(is.na(habit), "Unknown", habit),
+    family = ifelse(is.na(family), "Unknown", family),
+    class  = ifelse(is.na(class), "Unknown", class),
+    order  = ifelse(is.na(order), "Unknown", order)
+  )
+
+## Ensure numeric columns are numeric
+dat <- dat %>%
+  mutate(across(c(total, total300, is_distinct, is_distinct300, ptv), as.numeric))
+
+## Create unified abundance column 
+dat <- dat %>%
+  mutate(abund = coalesce(total300, total))
+
+## Remove rows with no abundance data (essential for analysis)
+dat <- dat %>% filter(!is.na(total) & total > 0)
+
+## Standardize text categories
+dat <- dat %>%
+  mutate(across(c(state, target_taxon, family, genus), ~str_trim(toupper(.))))
+
+## Keep only first visits / relevant visits (avoid double-counting)
+dat <- dat %>%
+  filter(visit_no %in% c("1","R","2"))
+
+## Keep only sampled sites
+dat <- dat %>%
+  filter(sitesamp == "Y")
+
+dat1 <- dat |>
+  mutate(taxon = if_else(!is.na(genus) & genus != "", genus, family))
+
+
+```
+
+```{r}
+
+# Quick Checks
+
+# Rows after cleaning
+nrow(dat)
+
+# Missing PTVs 
+sum(is.na(dat$ptv))
+
+# Abundance distribution (spot outliers)
+summary(dat$abund)
+```
+```{r}
+library(tidyr)
+
+```
+
+```{r}
+# Data Preparation
+
+## Choose taxon level
+dat <- dat |>
+  mutate(taxon = if_else(!is.na(genus) & genus != "", genus, family))
+
+## Build site metadata (one row per site-visit)
+site_meta <- dat |>
+  distinct(uid, site_id, unique_id, state, epa_reg, ag_eco9, date_col, visit_no, sample_type)
+
+## Build community matrix (site × taxon)
+comm <- dat |>
+  group_by(uid, taxon) |>
+  summarise(abund = sum(abund, na.rm = TRUE), .groups = "drop") |>
+  pivot_wider(names_from = taxon, values_from = abund, values_fill = 0)
+
+# Keep numeric matrix plus matching metadata
+comm_mat <- comm |> select(-uid) |> as.data.frame()
+rownames(comm_mat) <- comm$uid
+
+# Align site_meta to comm rows
+site_meta2 <- site_meta |> filter(uid %in% rownames(comm_mat)) |>
+  arrange(match(uid, rownames(comm_mat)))
+
+
+# Quick check
+dim(comm_mat)
+head(site_meta2)
+
+```
+
+```{r}
+# Install vegan 
+install.packages("vegan")
+
+# Load vegan
+library(vegan)
+
+```
+```{r}
+# Load required libraries
+library(dplyr)
+library(ggplot2)
+library(vegan)
+
+```
+
+
+```{r}
+# 1. Basic check
+dim(comm_mat)         # sites × taxa
+summary(rowSums(comm_mat))  # total counts per site
+summary(colSums(comm_mat))  # counts per taxon
+
+# 2. Species richness (number of taxa per site)
+richness <- specnumber(comm_mat)
+hist(richness, main = "Species Richness per Site", xlab = "No. of taxa")
+
+# 3. Abundance distribution of taxa
+top_taxa <- sort(colSums(comm_mat), decreasing = TRUE)[1:15]
+barplot(top_taxa, las = 2, cex.names = 0.7,
+        main = "Top 15 Most Abundant Taxa")
+
+# 4. Diversity indices
+shannon <- diversity(comm_mat, index = "shannon")
+simpson <- diversity(comm_mat, index = "simpson")
+
+# Compare diversity across states
+boxplot(shannon ~ site_meta2$state, las = 2,
+        main = "Shannon Diversity by State")
+
+
+```
+
+# Q1
+```{r}
+library(vegan)
+library(ggplot2)
+library(dplyr)
+
+# ---- Biodiversity metrics ----
+richness <- specnumber(comm_mat)
+shannon  <- diversity(comm_mat, index = "shannon")
+simpson  <- diversity(comm_mat, index = "simpson")
+
+alpha <- site_meta2 %>%
+  mutate(richness = richness,
+         shannon = shannon,
+         simpson = simpson)
+
+# ---- EPT richness ----
+tax_tab <- dat %>% distinct(taxon, order)
+ept_taxa <- tax_tab %>%
+  filter(order %in% c("EPHEMEROPTERA", "PLECOPTERA", "TRICHOPTERA")) %>%
+  pull(taxon) %>% unique()
+
+alpha$ept_richness <- rowSums(comm_mat[, colnames(comm_mat) %in% ept_taxa] > 0, na.rm = TRUE)
+alpha$ept_prop <- alpha$ept_richness / alpha$richness
+
+# ---- Visualizations ----
+p11<- ggplot(alpha, aes(x=ag_eco9, y=shannon, fill=ag_eco9)) +
+  geom_boxplot() + coord_flip() +
+  labs(x="Ecoregion (AG_ECO9)", y="Shannon diversity") +
+  theme(legend.position="none")
+
+p12<-ggplot(alpha, aes(state, richness)) +
+  geom_boxplot(fill="lightgray", color="black") +
+  coord_flip() +
+  labs(x="State", y="Taxon richness")
+
+boxplot(alpha$richness, alpha$ept_richness,
+        names=c("Richness","EPT Richness"),
+        col=c("skyblue","lightgreen"),
+        main="Species and EPT Richness per Site",
+        ylab="Number of Taxa")
+
+
+boxplot(ept_prop ~ ag_eco9, data=alpha,
+        main="EPT Proportion by Ecoregion",
+        xlab="Ecoregion", ylab="EPT Proportion",
+        las=2, col="lightgreen")
+
+ggsave("figs/diversity_by_ecoregion.png", p11, width=7, height=5, dpi=300)
+ggsave("figs/richness_by_state.png", p12, width=7, height=5, dpi=300)
+
+```
+
+
+
+
+
+
+
+# Pollution tolerance & water quality (Q2)
+```{r}
+# Build a taxon→PTV look up (use best available PTV at chosen level)
+ptv_lu <- dat |>
+  distinct(taxon, ptv) 
+```
+
+```{r}
+# Compute CWM PTV for each site
+# align look up to comm_mat columns
+ptv_vec <- ptv_lu$ptv[match(colnames(comm_mat), ptv_lu$taxon)]
+
+cwm_ptv <- function(abund_row, trait){
+  w <- abund_row
+  ok <- !is.na(trait) & trait >= 0
+  if(!any(w[ok] > 0)) return(NA_real_)
+  sum(w[ok] * trait[ok]) / sum(w[ok])
+}
+
+cwm <- apply(comm_mat, 1, cwm_ptv, trait = ptv_vec)
+
+alpha <- alpha |> mutate(cwm_ptv = cwm)
+
+```
+
+```{r}
+# Visualize & test differences
+p3 <- ggplot(alpha, aes(ag_eco9, cwm_ptv)) + geom_boxplot() + coord_flip() +
+  labs(x="Ecoregion", y="Community-weighted PTV")
+
+ggsave("figs/cwm_ptv_by_ecoregion.png", p3, width=7, height=5, dpi=300)
+
+# Quick ANOVA (exploratory)
+summary(aov(cwm_ptv ~ ag_eco9, data = alpha))
+
+
+```
+```{r}
+ggplot(alpha, aes(x = ag_eco9, y = ept_richness / richness)) +
+  geom_boxplot() +
+  coord_flip() +
+  labs(x = "Ecoregion", y = "EPT Proportion")
+
+ggplot(alpha, aes(x = ag_eco9, y = cwm_ptv)) +
+  geom_boxplot() +
+  coord_flip() +
+  labs(x = "Ecoregion", y = "Community-weighted PTV")
+
+```
+
+
+
+# Functional traits (FFG, HABIT) (Q3)
+```{r}
+unique(dat$ffg)
+unique(dat$habit)
+
+```
+
+```{r}
+# Define FFG and HABIT codes
+ffg_levels <- c("CG", "CF", "SC", "SH", "PI", "PA")  
+habit_levels <- c("BU", "SP", "CN", "DV", "CB", "PK")
+
+
+ffg_levels_present <- intersect(ffg_levels, unique(unlist(strsplit(dat$ffg, ","))))
+habit_levels_present <- intersect(habit_levels, unique(unlist(strsplit(dat$habit, ","))))
+
+ffg_levels_present <- intersect(ffg_levels, unique(unlist(strsplit(dat$ffg, ","))))
+habit_levels_present <- intersect(habit_levels, unique(unlist(strsplit(dat$habit, ","))))
+```
+
+```{r}
+# Compute site-level proportions
+library(dplyr)
+library(tidyr)
+
+# FFG
+ffg_long <- dat %>%
+  filter(!is.na(ffg)) %>%
+  separate_rows(ffg, sep = ",")  # split multiple codes into separate rows
+
+ffg_site <- ffg_long %>%
+  group_by(uid, ffg) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  pivot_wider(names_from = ffg, values_from = count, values_fill = 0)
+
+ffg_prop <- ffg_site %>%
+  mutate(total = rowSums(across(all_of(ffg_levels_present)))) %>%
+  mutate(across(all_of(ffg_levels_present), ~.x / total)) %>%
+  select(-total)
+
+# HABIT
+habit_long <- dat %>%
+  filter(!is.na(habit)) %>%
+  separate_rows(habit, sep = ",")
+
+habit_site <- habit_long %>%
+  group_by(uid, habit) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  pivot_wider(names_from = habit, values_from = count, values_fill = 0)
+
+habit_prop <- habit_site %>%
+  mutate(total = rowSums(across(all_of(habit_levels_present)))) %>%
+  mutate(across(all_of(habit_levels_present), ~.x / total)) %>%
+  select(-total)
+
+```
+
+```{r}
+# Join with site metadata
+ffg_prop$uid <- as.character(ffg_prop$uid)
+habit_prop$uid <- as.character(habit_prop$uid)
+site_meta2$uid <- as.character(site_meta2$uid)
+
+ffg_meta <- site_meta2 %>% left_join(ffg_prop, by="uid")
+habit_meta <- site_meta2 %>% left_join(habit_prop, by="uid")
+
+```
+
+```{r}
+# Summarize by eco region
+ffg_summary <- ffg_meta %>%
+  group_by(ag_eco9) %>%
+  summarise(across(all_of(ffg_levels_present), ~mean(.x, na.rm=TRUE)))
+
+habit_summary <- habit_meta %>%
+  group_by(ag_eco9) %>%
+  summarise(across(all_of(habit_levels_present), ~mean(.x, na.rm=TRUE)))
+
+```
+
+```{r}
+# Plot stacked bar charts
+
+library(ggplot2)
+
+# FFG
+ffg_long_plot <- ffg_meta %>%
+  select(ag_eco9, all_of(ffg_levels_present)) %>%
+  pivot_longer(cols = all_of(ffg_levels_present), names_to = "FFG", values_to = "proportion")
+
+p_ffg <- ggplot(ffg_long_plot, aes(x = ag_eco9, y = proportion, fill = FFG)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Ecoregion", y = "Mean Proportion", fill = "Functional Feeding Group") +
+  theme_minimal() +
+  coord_flip() +
+  scale_fill_brewer(palette = "Set3")
+
+p_ffg
+
+# HABIT
+habit_long_plot <- habit_meta %>%
+  select(ag_eco9, all_of(habit_levels_present)) %>%
+  pivot_longer(cols = all_of(habit_levels_present), names_to = "HABIT", values_to = "proportion")
+
+p_habit <- ggplot(habit_long_plot, aes(x = ag_eco9, y = proportion, fill = HABIT)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Ecoregion", y = "Mean Proportion", fill = "Habitat Trait") +
+  theme_minimal() +
+  coord_flip() +
+  scale_fill_brewer(palette = "Paired")
+
+p_habit
+
+```
+
+```{r}
+# View FFG proportions
+ffg_summary
+# View HABIT proportions
+habit_summary
+```
+
+# Community composition & indicator taxa (Q4)
+
+```{r}
+# Load packages
+library(vegan)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(indicspecies)
+library(readr)
+
+# ---------------------------
+# 1. Filter rare taxa
+# ---------------------------
+# Keep taxa present in at least 5% of sites
+taxa_pres <- colSums(comm_mat > 0) / nrow(comm_mat)
+comm_filtered <- comm_mat[, taxa_pres >= 0.05]
+
+# ---------------------------
+# 2. Hellinger transformation (for NMDS & PERMANOVA)
+# ---------------------------
+comm_hell <- decostand(comm_filtered, method = "hellinger")
+
+# ---------------------------
+# 3. NMDS
+# ---------------------------
+set.seed(123)
+nmds <- metaMDS(comm_hell, k = 2, trymax = 50, autotransform = FALSE)
+
+# Prepare NMDS data frame
+nmds_df <- as.data.frame(nmds$points) %>%
+  mutate(uid = rownames(.)) %>%
+  inner_join(site_meta2, by = "uid")
+
+# NMDS plot
+p_nmds <- ggplot(nmds_df, aes(MDS1, MDS2, color = ag_eco9)) +
+  geom_point(alpha = 0.7) +
+  labs(title = "NMDS of macroinvertebrate communities", color = "Ecoregion") +
+  theme_minimal()
+ggsave("figs/nmds_by_ecoregion.png", p_nmds, width = 6, height = 5, dpi = 300)
+p_nmds
+
+# ---------------------------
+# 4. PERMANOVA
+# ---------------------------
+adonis2(comm_hell ~ ag_eco9, data = site_meta2, permutations = 999)
+
+# ---------------------------
+# 5. Indicator Species Analysis (IndVal)
+# ---------------------------
+grp <- factor(site_meta2$ag_eco9)
+
+# Convert to presence/absence (optional but standard for IndVal)
+comm_pa <- decostand(comm_filtered, method = "pa")
+
+set.seed(123)
+ind <- multipatt(comm_pa, grp, func = "r.g", duleg = TRUE, max.order = 1, control = how(nperm = 999))
+
+# Extract significant indicators
+ind_res <- ind$sign %>%
+  as.data.frame() %>%
+  rownames_to_column("taxon") %>%
+  arrange(p.value) %>%
+  filter(p.value <= 0.05) %>%
+  slice(1:20)  # Top 20 indicator taxa
+
+
+
+```
+
+
+```{r}
+# Ordination (NMDS) with vegan
+library(vegan)
+set.seed(123)
+comm_hell <- decostand(comm_mat, method = "hellinger")
+nmds <- metaMDS(comm_hell, k=2, trymax=50, autotransform=FALSE)
+
+nmds_df <- as.data.frame(nmds$points) |>
+  mutate(uid = rownames(.)) |>
+  inner_join(site_meta2, by="uid")
+
+p5 <- ggplot(nmds_df, aes(MDS1, MDS2, color = ag_eco9)) +
+  geom_point(alpha=0.7) +
+  labs(title="NMDS of macroinvertebrate communities", color="Ecoregion")
+ggsave("figs/nmds_by_ecoregion.png", p5, width=6, height=5, dpi=300)
+
+```
+
+```{r}
+# PERMANOVA (optional, quick test of group differences)
+adonis2(comm_hell ~ ag_eco9, data = site_meta2, permutations = 999)
+
+```
+
+```{r}
+# Indicator species analysis (indicspecies)
+library(indicspecies)
+
+grp <- factor(site_meta2$ag_eco9)
+set.seed(123)
+ind <- multipatt(comm_mat, grp, func = "r.g", duleg = TRUE, max.order = 1, control = how(nperm=999))
+
+ind_res <- ind$sign |> as.data.frame() |>
+  rownames_to_column("taxon") |>
+  arrange(p.value) |>
+  filter(p.value <= 0.05) |>
+  slice(1:20)   # top 20 indicators
+
+write_csv(ind_res, "data/processed/indicator_taxa_top20.csv")
+
+```
+
+```{r}
+install.packages(c("rmarkdown", "yaml"))
+renv::status()
+
+```
+```{r}
+renv::install("rmarkdown")
+renv::install("yaml")
+
+```
+
+```{r}
+renv::status()
+
+
+```
