@@ -56,20 +56,20 @@ By combining traditional biodiversity metrics, trait-based approaches, and multi
 - **Richness by State**:  
   - High: Virginia, Vermont, Pennsylvania (~62–65 taxa) → diverse and complex communities.  
   - Low: Mississippi, South Dakota, Texas (~25 taxa) → less diverse, possibly reflecting environmental stressors or habitat simplification.
-  - 
+    
 - **EPT Proportion**: Highest in Western Mountains,(WMT ~0.42), lowest in Coastal Plains, (CPL ~0.18)
-- 
+ 
 - **Interpretation**: WMT and NAP support more structurally complex, less disturbed communities, while CPL and SPL indicate degraded or stressed conditions.
 
 ### Pollution Sensitivity & Water Quality
 
 - **ANOVA Results**: Significant differences in pollution tolerance across ecoregions (F = 55.67, p < 2e-16).
 - **EPT Proportion**:
-      * High: WMT, Western Mountains (~0.42) → better water quality.
-      * Low: CPL, Coastal Plains (~0.18) → degraded water quality.
+      - High: WMT, Western Mountains (~0.42) → better water quality.
+      - Low: CPL, Coastal Plains (~0.18) → degraded water quality.
 - **Community-Weighted Pollution Tolerance (CWM-PTV)**:
-      * High: TPL, Temperate Plains & CPL, Coastal Plains → dominance of tolerant taxa.
-      * Low: WMT, Western Mountains & SAP, Southeastern Plains → dominance of sensitive taxa.
+      - High: TPL, Temperate Plains & CPL, Coastal Plains → dominance of tolerant taxa.
+      - Low: WMT, Western Mountains & SAP, Southeastern Plains → dominance of sensitive taxa.
 - **Interpretation**: WMT shows healthier, less polluted conditions; TPL and CPL indicate degraded systems; SAP reflects mixed ecological conditions.
 
 
