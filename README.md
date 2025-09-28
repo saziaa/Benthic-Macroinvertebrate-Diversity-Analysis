@@ -40,11 +40,11 @@ By combining traditional biodiversity metrics, trait-based approaches, and multi
 
 - Community analysis:
 
-      * Hellinger transformation
+   * Hellinger transformation
 
-      * NMDS ordination
+   * NMDS ordination
 
-      * PERMANOVA for group differences
+   * PERMANOVA for group differences
 
 - Indicator species: IndVal analysis with permutation tests.
 
