@@ -51,11 +51,14 @@ By combining traditional biodiversity metrics, trait-based approaches, and multi
 🔑 **Key Findings**
 ### Biodiversity & Regional Variation
 
-- **Shannon Diversity**: Highest in Northern Appalachians, (NAP ~3.1), lowest in Southern Plains, (SPL ~2.5).  
+- **Shannon Diversity**: Highest in Northern Appalachians, (NAP ~3.1), lowest in Southern Plains, (SPL ~2.5).
+- 
 - **Richness by State**:  
   - High: Virginia, Vermont, Pennsylvania (~62–65 taxa) → diverse and complex communities.  
-  - Low: Mississippi, South Dakota, Texas (~25 taxa) → less diverse, possibly reflecting environmental stressors or habitat simplification.  
+  - Low: Mississippi, South Dakota, Texas (~25 taxa) → less diverse, possibly reflecting environmental stressors or habitat simplification.
+  - 
 - **EPT Proportion**: Highest in Western Mountains,(WMT ~0.42), lowest in Coastal Plains, (CPL ~0.18)
+- 
 - **Interpretation**: WMT and NAP support more structurally complex, less disturbed communities, while CPL and SPL indicate degraded or stressed conditions.
 
 ### Pollution Sensitivity & Water Quality
