@@ -16,9 +16,9 @@ By combining traditional biodiversity metrics, trait-based approaches, and multi
 
 4. Identify indicator taxa and test whether community composition differs significantly among ecoregions.
 
-📊 Data
+📊 **Data**
 
-- Source: U.S. EPA National Rivers & Streams Assessment (NRSA) benthic macroinvertebrate dataset.
+- Source: [EPA National Rivers and Streams Assessment (NRSA)](https://www.epa.gov/national-aquatic-resource-surveys/nrsa).
 
 - Columns include:
 
@@ -29,3 +29,27 @@ By combining traditional biodiversity metrics, trait-based approaches, and multi
     * Abundance: TOTAL, TOTAL300
 
     * Traits: FFG (Functional Feeding Group), HABIT, PTV (Pollution Tolerance Value)
+
+⚙️ **Methodology**
+
+- Alpha diversity: Richness, EPT richness, EPT proportion.
+
+- Pollution tolerance: Community-Weighted Mean PTV (CWM-PTV).
+
+- Functional traits: Site-level proportions of FFGs and HABITs.
+
+- Community analysis:
+
+      * Hellinger transformation
+
+      * NMDS ordination
+
+      * PERMANOVA for group differences
+
+- Indicator species: IndVal analysis with permutation tests.
+
+🔑 **Key Findings**
+
+
+
+
