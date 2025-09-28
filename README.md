@@ -52,7 +52,7 @@ By combining traditional biodiversity metrics, trait-based approaches, and multi
 ### Biodiversity & Regional Variation
 
 - **Shannon Diversity**: Highest in Northern Appalachians, (NAP ~3.1), lowest in Southern Plains, (SPL ~2.5).
-- 
+
 - **Richness by State**:  
   - High: Virginia, Vermont, Pennsylvania (~62–65 taxa) → diverse and complex communities.  
   - Low: Mississippi, South Dakota, Texas (~25 taxa) → less diverse, possibly reflecting environmental stressors or habitat simplification.
