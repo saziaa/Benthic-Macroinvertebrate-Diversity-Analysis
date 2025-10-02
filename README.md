@@ -1,12 +1,12 @@
-## **Benthic Macroinvertebrate Diversity Analysis**
+# Benthic Macroinvertebrate Diversity Analysis
 
-📌  **Project Overview**
+## 📌  Project Overview
 
 This project investigates benthic macroinvertebrate communities across U.S. ecoregions using EPA biological monitoring data. Macroinvertebrates are widely used bioindicators because they integrate ecological conditions over time and respond to multiple stressors, such as nutrient enrichment, sedimentation, and habitat alteration.
 
 By combining traditional biodiversity metrics, trait-based approaches, and multivariate statistics, this analysis provides insights into biodiversity patterns, water quality gradients, functional ecosystem processes, and indicator species at regional scales.
 
-🎯 **Objectives**
+## 🎯 Objectives
 
 1. Quantify biodiversity and compare diversity across ecoregions and states.
 
@@ -16,7 +16,7 @@ By combining traditional biodiversity metrics, trait-based approaches, and multi
 
 4. Identify indicator taxa and test whether community composition differs significantly among ecoregions.
 
-🛢️ **Data**
+## 🛢️ Data
 
 - Source: [EPA National Rivers and Streams Assessment (NRSA)](https://www.epa.gov/national-aquatic-resource-surveys/nrsa).
 
@@ -30,7 +30,7 @@ By combining traditional biodiversity metrics, trait-based approaches, and multi
 
     * Traits: FFG (Functional Feeding Group), HABIT, PTV (Pollution Tolerance Value)
 
-⚙️ **Methodology**
+## ⚙️ Methodology
 
 - Alpha diversity: Richness, EPT richness, EPT proportion.
 
@@ -48,7 +48,7 @@ By combining traditional biodiversity metrics, trait-based approaches, and multi
 
 - Indicator species: IndVal analysis with permutation tests.
 
-🔑 **Key Findings**
+## 🔑 Key Findings
 ### Biodiversity & Regional Variation
 This analysis evaluates how richness and diversity vary among states and ecoregions to establish baseline patterns of community structure. It helps identify regions with complex, healthy assemblages versus those with simplified, stressed communities.
 
@@ -124,7 +124,7 @@ The analysis of macroinvertebrate community composition across U.S. ecoregions i
    - Tolerant taxa in CPL/SPL indicate degraded or enriched conditions.
    - Indicator species provide useful bioindicators of water quality and ecosystem health.
 
-⚙️ **Tools & Libraries**
+## ⚙️ Tools & Libraries
 
 - Language: R
 
