@@ -16,7 +16,7 @@ By combining traditional biodiversity metrics, trait-based approaches, and multi
 
 4. Identify indicator taxa and test whether community composition differs significantly among ecoregions.
 
-📊 **Data**
+🛢️ **Data**
 
 - Source: [EPA National Rivers and Streams Assessment (NRSA)](https://www.epa.gov/national-aquatic-resource-surveys/nrsa).
 
